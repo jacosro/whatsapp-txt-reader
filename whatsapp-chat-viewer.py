@@ -18,7 +18,7 @@ def start(file, resources):
     with open(file, 'r') as f:
         content = f.readlines()
 
-    search = re.compile("\d+/\d+/\d+ \d+:\d+ - ([^:]+): (.*)")
+    search = re.compile("\d+/\d+/\d+ \d+:\d+ - ([^:]+): (.+)")
 
     names = []
 
@@ -30,7 +30,7 @@ def start(file, resources):
             if message is not None:
                 match = re.compile("^https://maps.google.com/").match(message)
                 if match is None:
-                    if name not in names:
+                    if name not in names and len(name) <= 25:  # Whatsapp's name limit is 25 characters
                         names.append(name)
 
     print("Which one are you?\n\t{}".format(
@@ -53,24 +53,24 @@ def start(file, resources):
 
     body = []
 
-    cur_date = ""
+    current_date = ""
     for date, bubble in parser.parse(content, resources):
-        if date is None:
+        if date is None:  # Means that the last message contained a linebreak
             formerBubble = body[-1]
             if isinstance(formerBubble, Bubble):
-                formerBubble.setMessage(formerBubble.message + bubble) # In this case, data received is (None, string)
+                formerBubble.setMessage(formerBubble.message + bubble)  # In this case, data received is (None, string)
         else:
-            if date != cur_date:
+            if date != current_date:
                 body.append(Datestamp(date))
-                cur_date = date
+                current_date = date
 
-            print(body[-1])
-
-            print(bubble)
-
-            if isinstance(body[-1], Bubble) and isinstance(bubble, Bubble):
-                if body[-1].name == bubble.name:
+            formerBubble = body[-1]
+            if isinstance(formerBubble, Bubble) and isinstance(bubble, Bubble):
+                if formerBubble.name == bubble.name:
                     bubble.doHideName()
+                    formerBubble.doHideArrow()
+                else:
+                    formerBubble.addSeparation()
 
             body.append(bubble)
 

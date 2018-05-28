@@ -8,16 +8,17 @@ class Bubble():
       <p class="message">{2}</p>
       <span class="timestamp">{3}</span>
     </div>
-    <div class="bubble-arrow{0}"></div>
+    {4}
   </div>
   """
 
-    def __init__(self, name, message, time, left=True, hideName=False):
+    def __init__(self, name, message, time, left=True, hideName=False, hideArrow=False):
         self.name = name
         self.message = message
         self.time = time
         self.left = left
         self.hideName = hideName
+        self.hideArrow = hideArrow
 
     def setName(self, name):
         self.name = name
@@ -34,11 +35,18 @@ class Bubble():
     def doHideName(self):
         self.hideName = True
 
+    def doHideArrow(self):
+        self.hideArrow = True
+
+    def addSeparation(self):
+        self.bubble += '<br>'
+
     def inflate(self):
         alt = "" if self.left else " alt"
         name_div = "" if self.hideName else self.name_tag.format(self.name)
+        arrow = '' if self.hideArrow else '<div class="bubble-arrow{0}"></div>'.format(alt)
 
-        return self.bubble.format(alt, name_div, self.message, self.time)
+        return self.bubble.format(alt, name_div, self.message, self.time, arrow)
 
 
 class Broadcast():

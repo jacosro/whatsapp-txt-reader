@@ -28,6 +28,7 @@ class Parser:
                 message = match.group(5)
 
                 if name:
+                    print(line)
                     mediamatch = self.retext.match(message)
 
                     if mediamatch:

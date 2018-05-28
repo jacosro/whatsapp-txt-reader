@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import re
 from media import Media
 from messages import Bubble, Broadcast

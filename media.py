@@ -96,7 +96,7 @@ class Media():
         match = pattern.match(src)
 
         if match is None:
-            raise LookupError("Unknown filetype: " + src)1
+            raise LookupError("Unknown filetype: " + src)
 
         if not src.endswith('loc'):
             if not path.isfile(self.resources + "/" + src):

@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 class Bubble():
     name_tag = """<p class="name">{}</p>"""
     bubble = """

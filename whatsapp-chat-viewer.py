@@ -33,21 +33,33 @@ def start(file, resources):
                     if name not in names and len(name) <= 25:  # Whatsapp's name limit is 25 characters
                         names.append(name)
 
-    print("Which one are you?\n\t{}".format(
-        '\n\t'.join(
-            ['{}. {}'.format(num + 1, name) for num, name in enumerate(names)]
-        )))
-
     me = names[0]
 
-    while True:
-        _input = input('Type one of the above numbers: ')
-        try:
-            selected = int(_input) - 1
-            me = names[selected]
-            break
-        except:
-            continue
+    if len(names) == 1:
+        while True:
+            _input = input("Are you {}? (y/n): ".format(names[0]))
+            if re.compile("y|yes", re.IGNORECASE).match(_input):
+                break
+            elif re.compile("n|no", re.IGNORECASE).match(_input):
+                me = None
+                break
+            else:
+                print("Type yes or no")
+
+    else:
+        print("Which one are you?\n\t{}".format(
+            '\n\t'.join(
+                ['{}. {}'.format(num + 1, name) for num, name in enumerate(names)]
+            )))
+
+        while True:
+            _input = input('Type one of the above numbers: ')
+            try:
+                selected = int(_input) - 1
+                me = names[selected]
+                break
+            except:
+                continue
 
     parser = Parser(names, me)
 
@@ -78,7 +90,7 @@ def start(file, resources):
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Chat With {}</title>
+      <title>{}</title>
       <link rel="stylesheet" type="text/css" href="{}">
     </head>
     <body>
@@ -88,7 +100,7 @@ def start(file, resources):
     </div>
 
     </body>
-    </html>""".format(me, css_file, ''.join([message.inflate() for message in body]))
+    </html>""".format(file[:len(file) - 4], css_file, ''.join([message.inflate() for message in body]))
 
     filename = file.replace(' ', '_').replace('.txt', '.html')
 

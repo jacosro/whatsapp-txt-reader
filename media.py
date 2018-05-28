@@ -89,15 +89,16 @@ class Media():
         self.resources = rsrcs
 
     def getMedia(self, src):
-        src = src[1:] # WhatsApp puts an invisible unicode character (\u200e) just before the name of a media file
+        if not src.endswith('loc'):
+            src = src[1:]  # WhatsApp puts an invisible unicode character (\u200e) just before the name of a media file
 
         pattern = re.compile(".*\.(jpg|opus|mp3|mp4|vcf|pdf|loc)")
         match = pattern.match(src)
 
         if match is None:
-            raise LookupError("Unknown filetype: " + src)
+            raise LookupError("Unknown filetype: " + src)1
 
-        if 'loc' not in src:
+        if not src.endswith('loc'):
             if not path.isfile(self.resources + "/" + src):
                 raise IOError()
 

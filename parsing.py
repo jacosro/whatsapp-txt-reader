@@ -1,5 +1,5 @@
 import re
-from media import Media
+from media import parse_media
 from messages import Bubble, Broadcast
 
 
@@ -11,11 +11,11 @@ class Parser:
 
         #self.timeregex = re.compile("^(\d+/\d+/\d+), (\d+:\d+) - .*")
         self.regex = re.compile("^(\d+/\d+/\d+) (\d+:\d+) - (({}): )?(.*)".format('|'.join(names)))
-        self.retext = re.compile("(.*\.(jpg|opus|mp3|mp4|vcf|pdf)) \([a-z]+ [a-z]+\)$")  # IMG-20170327-WA00021.jpg (file attached)
+        self.mediaregex = re.compile("^.?([A-Z]{3}-[0-9]{8}-WA[0-9]{4}\.[^\s]+) \([a-z]+ [a-z]+\)$")  # IMG-20170327-WA00021.jpg (file attached)
         self.locationregex = re.compile("(.*): (http(s)?://maps.google.com/.*)$")
+        self.contactregex = re.compile("(^[^.]+\.vcf) \([a-z]+ [a-z]+\)$")
 
     def parse(self, content, resources):
-        media = Media(resources)
 
         for line in content:
             match = self.regex.match(line)
@@ -27,19 +27,21 @@ class Parser:
                 message = match.group(5)
 
                 if name:
-                    mediamatch = self.retext.match(message)
+                    mediamatch = self.mediaregex.match(message)
+                    locationmatch = self.locationregex.match(message)
+                    contactmatch = self.contactregex.match(message)
 
                     if mediamatch:
                         try:
                             src = mediamatch.group(1)
-                            message = media.getMedia(src).getObject()
+                            message = parse_media(resources, src).getObject()
                         except IOError:
-                            message = "<strong>Could not find file: </strong>{}".format(src)
-                    else:
-                        locationmatch = self.locationregex.match(message)
+                            message = "<strong>File not found: </strong>{}".format(src)
+                    elif locationmatch:
+                        message = parse_media(resources, locationmatch.group(2)).getObject()
 
-                        if locationmatch:
-                            message = media.getMedia(locationmatch.group(2) + ".loc").getObject()
+                    elif contactmatch:
+                        message = parse_media(resources, contactmatch.group(1)).getObject()
 
                     yield (date, Bubble(name, message, time, name != self.me))
 

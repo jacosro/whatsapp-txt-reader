@@ -64,14 +64,14 @@ class ContactMedia:
         <strong>Contact: </strong>{}: {}
         '''.format(self.src[:len(self.src) - 4], number)
 
-class PDFMedia:
+class DocumentMedia:
     def __init__(self, src, resources):
         self.src = src
         self.resources = resources
 
     def getObject(self):
         link = "{}/{}".format(self.resources, self.src) if self.resources else self.src
-        return "<a href={}><strong>PDF file</strong></a>".format(link)
+        return "<a href={}><strong>Document</strong></a>".format(link)
 
 class LocationMedia:
     def __init__(self, src, resources):
@@ -91,16 +91,14 @@ class Media():
     def getMedia(self, src):
         if not src.endswith('loc'):
             src = src[1:]  # WhatsApp puts an invisible unicode character (\u200e) just before the name of a media file
+            if not path.isfile(self.resources + "/" + src):
+                raise IOError()
 
         pattern = re.compile(".*\.(jpg|opus|mp3|mp4|vcf|pdf|loc)")
         match = pattern.match(src)
 
         if match is None:
             raise LookupError("Unknown filetype: " + src)
-
-        if not src.endswith('loc'):
-            if not path.isfile(self.resources + "/" + src):
-                raise IOError()
 
         filetype = match.group(1)
 
@@ -115,6 +113,35 @@ class Media():
         elif filetype == "vcf":
             return ContactMedia(src, self.resources)
         elif filetype == "pdf":
-            return PDFMedia(src, self.resources)
+            return DocumentMedia(src, self.resources)
         elif filetype == "loc":
             return LocationMedia(src, self.resources)
+
+
+def parse_media(resources_dir, msg):
+    media_pattern = re.compile("[A-Z]{3}-[0-9]{8}-WA[0-9]{4}\.[^\s]+")
+    location_pattern = re.compile("^https://maps.google.com/[^\s]+")
+    contact_pattern = re.compile("^[^.]+\.vcf$")
+
+    res = None
+
+    if location_pattern.match(msg):
+        res = LocationMedia
+    elif contact_pattern.match(msg):
+        res = ContactMedia
+    elif media_pattern.match(msg):
+        if msg.startswith('IMG'):
+            res = ImageMedia
+        elif msg.startswith('VID'):
+            res = VideoMedia
+        elif msg.startswith('PTT'):
+            res = VoiceNoteMedia
+        elif msg.startswith('AUD'):
+            res = AudioMedia
+        else:
+            res = DocumentMedia
+
+    if res is None:
+        raise ValueError("Unrecognized media: {}".format(msg))
+
+    return res(msg, resources_dir)
